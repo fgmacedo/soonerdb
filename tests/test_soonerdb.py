@@ -54,6 +54,7 @@ class TestWAL:
         db.put("a", "some value")
         db.put("b", "other value")
         db.put("S", "São Paulo")
+        del db
 
         db = SoonerDB(tmpdir)
         assert db.get("a") == "some value"
@@ -65,6 +66,7 @@ class TestWAL:
         db.put("a", "Frodo")
         db.put("b", "Gandalf")
         db.put("a", "Sam")
+        del db
 
         db = SoonerDB(tmpdir)
         wal_log = db.wal.path
