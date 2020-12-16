@@ -3,19 +3,16 @@ from pathlib import Path
 from struct import pack, unpack
 
 
-def write_pair(buffer, key, value):
+def write_pair(buffer_write, key, value):
     key_bytes = key.encode('utf-8')
     value_bytes = value.encode('utf-8')
-    position = buffer.tell()
-    buffer.write(pack("I", len(key_bytes)))
-    buffer.write(key_bytes)
-    buffer.write(pack("I", len(value_bytes)))
-    buffer.write(value_bytes)
-    buffer.flush()
-    return position
+    buffer_write(pack("I", len(key_bytes)))
+    buffer_write(key_bytes)
+    buffer_write(pack("I", len(value_bytes)))
+    buffer_write(value_bytes)
 
 
-def read_file(buffer_read):
+def read_pairs(buffer_read):
     while key_len_bytes := buffer_read(4):
         (key_len, ) = unpack('I', key_len_bytes)
         key_bytes = buffer_read(key_len)
@@ -37,11 +34,12 @@ class WAL:
         self.wal.close()
 
     def put(self, key, value):
-        write_pair(self.wal, key, value)
+        write_pair(self.wal.write, key, value)
+        self.wal.flush()
 
     def restore(self, memtable):
         self.wal.seek(0)
-        for key, value in read_file(self.wal.read):
+        for key, value in read_pairs(self.wal.read):
             memtable[key] = value
 
 
