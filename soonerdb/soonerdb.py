@@ -32,9 +32,9 @@ class SoonerDB:
 
         return default
 
-    def put(self, key, value):
+    def set(self, key, value):
         with write_mutex:
-            self._wal.put(key, value)
+            self._wal.set(key, value)
             self._memtable[key] = value
             if self._memtable_limit_reached():
                 self._dump_to_sstable()

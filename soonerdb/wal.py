@@ -12,7 +12,7 @@ class WAL:
     def __del__(self):
         self.wal.close()
 
-    def put(self, key, value):
+    def set(self, key, value):
         write_pair(self.wal.write, key, value)
         self.wal.flush()
 

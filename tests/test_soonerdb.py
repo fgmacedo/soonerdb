@@ -5,28 +5,28 @@ class TestMemtable:
         assert db.is_empty()
 
     def test_put(self, db):
-        db.put("a", "some value")
+        db.set("a", "some value")
         assert db.get("a") == "some value"
 
     def test_delete(self, db):
-        db.put("a", "some value")
+        db.set("a", "some value")
         db.delete("a")
         assert db.get("a") is None
         assert db.is_empty()
 
     def test_clear(self, db):
-        db.put("a", "some value")
-        db.put("b", "other value")
+        db.set("a", "some value")
+        db.set("b", "other value")
         db.clear()
         assert db.get("a") is None
         assert db.get("b") is None
         assert db.is_empty()
 
     def test_key_order(self, db):
-        db.put("s", "Sam")
-        db.put("g", "Gandalf")
-        db.put("f", "Frodo")
-        db.put("l", "Legolas")
+        db.set("s", "Sam")
+        db.set("g", "Gandalf")
+        db.set("f", "Frodo")
+        db.set("l", "Legolas")
 
         assert list(db.items()) == [
             ("f", "Frodo"),
@@ -44,16 +44,16 @@ class TestWAL:
         assert wal_log.read_bytes() == b''
 
     def test_put(self, db):
-        db.put("vinicity", "Mordor")
+        db.set("vinicity", "Mordor")
         wal_log = db._wal.path
         assert wal_log.exists()
         assert wal_log.read_bytes() == b'\x08\x00\x00\x00vinicity\x06\x00\x00\x00Mordor'
 
     def test_restore_from_wal(self, SoonerDB, tmpdir):
         db = SoonerDB(tmpdir)
-        db.put("a", "some value")
-        db.put("b", "other value")
-        db.put("S", "São Paulo")
+        db.set("a", "some value")
+        db.set("b", "other value")
+        db.set("S", "São Paulo")
         del db
 
         db = SoonerDB(tmpdir)
@@ -63,9 +63,9 @@ class TestWAL:
 
     def test_restore_from_wal_with_overriden_values(self, SoonerDB, tmpdir):
         db = SoonerDB(tmpdir)
-        db.put("a", "Frodo")
-        db.put("b", "Gandalf")
-        db.put("a", "Sam")
+        db.set("a", "Frodo")
+        db.set("b", "Gandalf")
+        db.set("a", "Sam")
         del db
 
         db = SoonerDB(tmpdir)
@@ -87,13 +87,13 @@ class TestSSTable:
 
     def test_dump_to_sstable(self, db, tmpdir):
         for i in range(db.memtable_items_limit + 1):
-            db.put(f"{i}", f"{i*2}")
+            db.set(f"{i}", f"{i*2}")
 
         assert len(db._memtable) == 1
 
     def test_get_using_sstable(self, db, tmpdir):
         for i in range(db.memtable_items_limit + 1):
-            db.put(f"{i}", f"{i*2}")
+            db.set(f"{i}", f"{i*2}")
 
         for i in range(db.memtable_items_limit + 1):
             assert db.get(f"{i}") == f"{i*2}"
@@ -102,7 +102,7 @@ class TestSSTable:
         db = SoonerDB(tmpdir)
 
         for i in range(db.memtable_items_limit + 1):
-            db.put(f"{i}", f"{i*2}")
+            db.set(f"{i}", f"{i*2}")
 
         del db
 
@@ -117,15 +117,15 @@ class TestSSTable:
     def test_get_value_from_the_last_ssfile(self, db):
         # one pass i*2 -> file1
         for i in range(db.memtable_items_limit):
-            db.put(f"{i}", f"{i*2}")
+            db.set(f"{i}", f"{i*2}")
 
         # one pass i*3 -> file2
         for i in range(db.memtable_items_limit):
-            db.put(f"{i}", f"{i*3}")
+            db.set(f"{i}", f"{i*3}")
 
         # one pass i*4 -> file3
         for i in range(db.memtable_items_limit):
-            db.put(f"{i}", f"{i*4}")
+            db.set(f"{i}", f"{i*4}")
 
         # then check that the value returned if for i*4
         for i in range(db.memtable_items_limit):
