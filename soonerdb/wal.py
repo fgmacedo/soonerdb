@@ -18,5 +18,9 @@ class WAL:
 
     def restore(self, memtable):
         self.wal.seek(0)
-        for key, value in read_pairs(self.wal.read):
+        read_fn = self.wal.read
+        for key, value in read_pairs(read_fn):
             memtable[key] = value
+
+    def clear(self):
+        self.wal.truncate(0)

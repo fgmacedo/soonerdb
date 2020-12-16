@@ -39,13 +39,13 @@ class TestMemtable:
 class TestWAL:
 
     def test_empty(self, db, tmpdir):
-        wal_log = db.wal.path
+        wal_log = db._wal.path
         assert wal_log.exists()
         assert wal_log.read_bytes() == b''
 
     def test_put(self, db):
         db.put("vinicity", "Mordor")
-        wal_log = db.wal.path
+        wal_log = db._wal.path
         assert wal_log.exists()
         assert wal_log.read_bytes() == b'\x08\x00\x00\x00vinicity\x06\x00\x00\x00Mordor'
 
@@ -69,7 +69,7 @@ class TestWAL:
         del db
 
         db = SoonerDB(tmpdir)
-        wal_log = db.wal.path
+        wal_log = db._wal.path
         assert db.get("a") == "Sam"
         assert db.get("b") == "Gandalf"
 
@@ -77,3 +77,56 @@ class TestWAL:
             b'\x01\x00\x00\x00a\x05\x00\x00\x00Frodo\x01\x00\x00\x00b\x07\x00\x00\x00Ganda'
             b'lf\x01\x00\x00\x00a\x03\x00\x00\x00Sam'
         )
+
+
+class TestSSTable:
+    """
+    We're using a key based on numerical index only to ease stressing the boundaries of
+    memtable limits.
+    """
+
+    def test_dump_to_sstable(self, db, tmpdir):
+        for i in range(db.memtable_items_limit + 1):
+            db.put(f"{i}", f"{i*2}")
+
+        assert len(db._memtable) == 1
+
+    def test_get_using_sstable(self, db, tmpdir):
+        for i in range(db.memtable_items_limit + 1):
+            db.put(f"{i}", f"{i*2}")
+
+        for i in range(db.memtable_items_limit + 1):
+            assert db.get(f"{i}") == f"{i*2}"
+
+    def test_restore_sstable(self, SoonerDB, tmpdir):
+        db = SoonerDB(tmpdir)
+
+        for i in range(db.memtable_items_limit + 1):
+            db.put(f"{i}", f"{i*2}")
+
+        del db
+
+        db = SoonerDB(tmpdir)
+        for i in range(db.memtable_items_limit + 1):
+            assert db.get(f"{i}") == f"{i*2}"
+
+        # the next key is none
+        i += 1
+        assert db.get(f"{i}") is None
+
+    def test_get_value_from_the_last_ssfile(self, db):
+        # one pass i*2 -> file1
+        for i in range(db.memtable_items_limit):
+            db.put(f"{i}", f"{i*2}")
+
+        # one pass i*3 -> file2
+        for i in range(db.memtable_items_limit):
+            db.put(f"{i}", f"{i*3}")
+
+        # one pass i*4 -> file3
+        for i in range(db.memtable_items_limit):
+            db.put(f"{i}", f"{i*4}")
+
+        # then check that the value returned if for i*4
+        for i in range(db.memtable_items_limit):
+            assert db.get(f"{i}") == f"{i*4}"
