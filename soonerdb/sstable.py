@@ -2,6 +2,7 @@ from pathlib import Path
 
 from .memtable import MemTable
 from .io import write_pair, read_pairs, write_index, read_index
+from .merge import merge_iterables
 
 
 class SSTable:
@@ -59,3 +60,23 @@ class SSTable:
             read_fn = read_pairs(f.read)
             _, value = next(read_fn)
             return value
+
+    def __iter__(self):
+        with open(self.path, 'rb') as f:
+            for key, value in read_pairs(f.read):
+                yield key, value
+
+    def merge(self, *others):
+        """
+        Merge tables. We start from most recent.
+
+        Read each file side-by-side, look at the first key on each file, copy the lowest key,
+        and repeat. Discart equals keys.
+
+        This produces a new merged segment file, also sorted by key.
+        """
+        memtable = MemTable()
+        for key, value in merge_iterables(self, *others):
+            memtable[key] = value
+
+        return memtable

@@ -48,3 +48,77 @@ class TestSSTable:
 
     def test_repr(self, lor_sstable):
         assert repr(lor_sstable) == f'SSTable("{lor_sstable.path}")'
+
+
+class TestMerge:
+
+    def test_merge_exactly_same(self, tmpdir, lor_memtable, SSTable):
+        table1 = SSTable(Path(tmpdir / 'table1.dat'), lor_memtable)
+        table2 = SSTable(Path(tmpdir / 'table2.dat'), lor_memtable)
+
+        merged = table1.merge(table2)
+
+        assert list(merged.items()) == list(table1)
+
+    def test_merge_three_tables(self, tmpdir, MemTable, SSTable):
+        table1 = SSTable(
+            Path(tmpdir / 'table1.dat'),
+            MemTable([
+                ("a", "asno"),
+                ("c", "cavalo"),
+                ("e", "elefante"),
+                ("g", "gato"),
+                ("i", "iguana"),
+                ("k", "koala"),
+                ("m", "macaco"),
+            ])
+        )
+        table2 = SSTable(
+            Path(tmpdir / 'table2.dat'),
+            MemTable([
+                ("a", "avelâ"),
+                ("d", "damasco"),
+                ("g", "gengibre"),
+                ("j", "jiló"),
+                ("m", "maçã"),
+                ("p", "pitaia"),
+                ("s", "sagu"),
+                ("u", "uva"),
+                ("y", "Yuzu"),
+            ])
+        )
+        table3 = SSTable(
+            Path(tmpdir / 'table3.dat'),
+            MemTable([
+                ("b", "bola"),
+                ("e", "escorregador"),
+                ("h", "helicóptero"),
+                ("k", "kapla"),
+                ("n", "navio"),
+                ("q", "quebra-cabeça"),
+                ("t", "trem"),
+            ])
+        )
+
+        merged = table1.merge(table2, table3)
+
+        assert list(merged.items()) == [
+            ("a", "asno"),
+            ("b", "bola"),
+            ("c", "cavalo"),
+            ("d", "damasco"),
+            ("e", "elefante"),
+            ("g", "gato"),
+            ("h", "helicóptero"),
+            ("i", "iguana"),
+            ("j", "jiló"),
+            ("k", "koala"),
+            ("m", "macaco"),
+            ("n", "navio"),
+            ("p", "pitaia"),
+            ("q", "quebra-cabeça"),
+            ("s", "sagu"),
+            ("t", "trem"),
+            ("u", "uva"),
+            ("y", "Yuzu"),
+        ]

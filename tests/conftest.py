@@ -22,8 +22,13 @@ def SSTable(tmpdir):
 
 
 @pytest.fixture
-def memtable():
+def MemTable():
     from soonerdb.soonerdb import MemTable
+    return MemTable
+
+
+@pytest.fixture
+def memtable(MemTable):
     return MemTable()
 
 
