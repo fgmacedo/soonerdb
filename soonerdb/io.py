@@ -11,7 +11,10 @@ def write_pair(buffer_write, key, value):
 
 
 def read_pairs(buffer_read):
-    while key_len_bytes := buffer_read(4):
+    while True:
+        key_len_bytes = buffer_read(4)
+        if not key_len_bytes:
+            break
         (key_len, ) = unpack('I', key_len_bytes)
         key_bytes = buffer_read(key_len)
         (value_len, ) = unpack('I', buffer_read(4))
@@ -27,7 +30,10 @@ def write_index(buffer_write, key, position):
 
 
 def read_index(buffer_read):
-    while key_len_bytes := buffer_read(4):
+    while True:
+        key_len_bytes = buffer_read(4)
+        if not key_len_bytes:
+            break
         (key_len, ) = unpack('I', key_len_bytes)
         key_bytes = buffer_read(key_len)
         (position, ) = unpack('I', buffer_read(4))
