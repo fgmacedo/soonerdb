@@ -39,7 +39,7 @@ Features
 - On-disk database persistence.
 - Data is durable in the face of application or power failure.
 - Thread-safe.
-- **Python 3.5+**.
+- **Python 3.6+**.
 
 
 📝 TODO List
