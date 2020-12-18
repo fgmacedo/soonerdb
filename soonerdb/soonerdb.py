@@ -46,6 +46,9 @@ class SoonerDB:
         sentinel = object()
         return self.get(key, sentinel) is not sentinel
 
+    def items():
+        return iter(self)
+
     def get(self, key, default=_sentinel):
         value = self._memtable.get(key, _sentinel)
         if value is not _sentinel:

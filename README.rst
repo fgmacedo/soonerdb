@@ -59,3 +59,42 @@ The project is hosted at https://github.com/fgmacedo/soonerdb-python and can be 
     cd soonerdb-python
     python setup.py install
 
+
+Quick intro
+-----------
+
+``SoonerDB`` has a dict-like API.
+
+Showtime:
+
+.. code-block:: pycon
+
+    In [1]: from soonerdb import SoonerDB
+
+    In [2]: db = SoonerDB('./tmp')
+
+    In [3]: db["my key"] = "A value"
+
+    In [4]: db["my key"]
+    Out[4]: 'A value'
+
+    In [5]: "my key" in db
+    Out[5]: True
+
+    In [6]: "other key" in db
+    Out[6]: False
+
+    In [7]: db["other key"]
+    ---------------------------------------------------------------------------
+    KeyError                                  Traceback (most recent call last)
+    <ipython-input-7-bc114493f395> in <module>
+    ----> 1 db["other key"]
+    KeyError: "Key 'other key' not found."
+
+    In [8]: db.get("other key", "default value")
+    Out[8]: 'default value'
+
+    In [9]: db.set("another", "value")
+
+    In [10]: list(db)
+    Out[10]: [('another', 'value'), ('my key', 'A value')]
