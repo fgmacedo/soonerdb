@@ -50,4 +50,5 @@ setup(
     url='https://github.com/fgmacedo/soonerdb',
     version='0.1.0',
     zip_safe=False,
+    long_description_content_type='text/x-rst',
 )
