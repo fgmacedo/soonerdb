@@ -4,6 +4,7 @@ from threading import Lock
 from .memtable import MemTable, SortedKeyList
 from .sstable import SSTable
 from .wal import WAL
+from .merge import MergeThread
 
 write_mutex = Lock()
 _sentinel = object()
@@ -22,6 +23,11 @@ class SoonerDB:
         self._wal.restore(self._memtable)
         self._load_sstables()
         self._merge_sstables()
+        self._merge_daemon = MergeThread(
+            merge_fn=self._merge_sstables,
+            sleep_interval=5,
+        )
+        self._merge_daemon.start()
 
     def __iter__(self):
         memtable = SSTable.merge_all(
@@ -45,6 +51,10 @@ class SoonerDB:
         """
         sentinel = object()
         return self.get(key, sentinel) is not sentinel
+
+    def __del__(self):
+        self._merge_daemon.kill()
+        self._merge_daemon.join()
 
     def get(self, key, default=_sentinel):
         value = self._memtable.get(key, _sentinel)
@@ -117,4 +127,3 @@ class SoonerDB:
 
         for table in old_tables:
             table.delete()
-

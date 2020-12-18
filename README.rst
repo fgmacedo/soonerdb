@@ -31,7 +31,7 @@ This project started as a learning tool when studing the excelent book
 
 .. note::
 
-    This project still in development and is not yet tested on production environments.
+    This is a toy project and is not yet tested on production environments.
     Use at your own risk.
 
 Features
@@ -42,14 +42,13 @@ Features
 - Support in-order traversal of all stored keys.
 - On-disk database persistence.
 - Data is durable in the face of application or power failure.
-- Thread-safe.
+- Background merge of segment files.
 - **Python 3.6+**.
 
 
 📝 TODO List
 -------------
 - [ ] Deletion of keys.
-- [ ] Background merge of segment files (segment files are merged at load time).
 
 
 Installation
