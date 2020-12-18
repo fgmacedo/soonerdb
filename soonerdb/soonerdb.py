@@ -36,6 +36,16 @@ class SoonerDB:
     def __setitem__(self, key, value):
         return self.set(key, value)
 
+    def __delitem__(self, key):
+        self.delete(key)
+
+    def __contains__(self, key):
+        """
+        Only for convenience, as there's no performance gain over `.get()`
+        """
+        sentinel = object()
+        return self.get(key, sentinel) is not sentinel
+
     def get(self, key, default=_sentinel):
         value = self._memtable.get(key, _sentinel)
         if value is not _sentinel:

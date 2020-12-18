@@ -10,10 +10,6 @@ class TestMemtable:
         db.set("a", "some value")
         assert db.get("a") == "some value"
 
-    def test_use_as_dict_api(self, db):
-        db["a"] = "some value"
-        assert db["a"] == "some value"
-
     def test_delete(self, db):
         db.set("a", "some value")
         db.delete("a")
@@ -47,6 +43,26 @@ class TestMemtable:
     def test_path_is_initialized(self, SoonerDB, tmpdir):
         db = SoonerDB(tmpdir / 'subdir')
         assert db.path.exists()
+
+
+class TestDictLikeInterface:
+
+    def test_use_as_dict_api(self, db):
+        db["a"] = "some value"
+        assert db["a"] == "some value"
+
+    def test_contains(self, db):
+        db["a"] = "some value"
+
+        assert 'a' in db
+        assert 'b' not in db
+
+    def test_delete(self, db):
+        db["a"] = "some value"
+
+        del db['a']
+
+        assert 'a' not in db
 
 
 class TestWAL:
