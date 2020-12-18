@@ -1,6 +1,7 @@
 from collections import deque
 from typing import Iterable, Tuple
 from threading import Thread, Event
+from weakref import WeakMethod
 
 
 def merge_iterables(*iterables: Iterable[Tuple[str, str]]):
@@ -61,18 +62,31 @@ def merge_iterables(*iterables: Iterable[Tuple[str, str]]):
 
 class MergeThread(Thread):
     def __init__(self, merge_fn, sleep_interval=5):
-        super().__init__(None, merge_fn, daemon=True)
+        super().__init__(None, daemon=True)
         self._kill = Event()
         self._interval = sleep_interval
 
+        # Weak ref to avoid keeping the SoonerDB instance in memory due to circular references.
+        self._ref_to_fn = WeakMethod(merge_fn)
+
     def run(self):
         while True:
-            self._target()
+            still_alive = self._run_target()
+            if not still_alive:
+                break
 
             # Sleep and watch for the kill event
             is_killed = self._kill.wait(self._interval)
             if is_killed:
                 break
+
+    def _run_target(self):
+        method = self._ref_to_fn()
+        if method is None:
+            return False
+
+        method()
+        return True
 
     def kill(self):
         self._kill.set()
