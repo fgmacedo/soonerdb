@@ -6,12 +6,15 @@ from .sstable import SSTable
 from .wal import WAL
 
 write_mutex = Lock()
+_sentinel = object()
 
 
 class SoonerDB:
 
     def __init__(self, path, memtable_items_limit=512):
         self.path = Path(path)
+        if not self.path.exists():
+            self.path.mkdir(parents=True, exist_ok=True)
         self.memtable_items_limit = memtable_items_limit
         self._memtable = MemTable()
         self._sstables = SortedKeyList(key=lambda x: str(x.path))
@@ -27,15 +30,24 @@ class SoonerDB:
         )
         return iter(memtable.items())
 
-    def get(self, key, default=None):
-        value = self._memtable.get(key, default)
-        if value is not None:
+    def __getitem__(self, key):
+        return self.get(key)
+
+    def __setitem__(self, key, value):
+        return self.set(key, value)
+
+    def get(self, key, default=_sentinel):
+        value = self._memtable.get(key, _sentinel)
+        if value is not _sentinel:
             return value
 
         for table in reversed(self._sstables):
-            value = table.get(key)
-            if value is not None:
+            value = table.get(key, _sentinel)
+            if value is not _sentinel:
                 return value
+
+        if default is _sentinel:
+            raise KeyError(f"Key '{key}' not found.")
 
         return default
 
@@ -53,7 +65,13 @@ class SoonerDB:
         return len(self._memtable) == 0
 
     def clear(self):
-        self._memtable.clear()
+        old_tables = self._sstables[:]
+        with write_mutex:
+            self._memtable.clear()
+            self._wal.clear()
+            self._sstables.clear()
+        for table in old_tables:
+            table.delete()
 
     def items(self):
         return self._memtable.items()

@@ -1,3 +1,5 @@
+import pytest
+
 
 class TestMemtable:
 
@@ -8,18 +10,25 @@ class TestMemtable:
         db.set("a", "some value")
         assert db.get("a") == "some value"
 
+    def test_use_as_dict_api(self, db):
+        db["a"] = "some value"
+        assert db["a"] == "some value"
+
     def test_delete(self, db):
         db.set("a", "some value")
         db.delete("a")
-        assert db.get("a") is None
+        assert db.get("a", None) is None
+        with pytest.raises(KeyError) as e:
+            db.get("a")
+        assert e.match("not found")
         assert db.is_empty()
 
-    def test_clear(self, db):
+    def test_clear_memtable(self, db):
         db.set("a", "some value")
         db.set("b", "other value")
         db.clear()
-        assert db.get("a") is None
-        assert db.get("b") is None
+        assert db.get("a", None) is None
+        assert db.get("b", None) is None
         assert db.is_empty()
 
     def test_key_order(self, db):
@@ -34,6 +43,10 @@ class TestMemtable:
             ("l", "Legolas"),
             ("s", "Sam"),
         ]
+
+    def test_path_is_initialized(self, SoonerDB, tmpdir):
+        db = SoonerDB(tmpdir / 'subdir')
+        assert db.path.exists()
 
 
 class TestWAL:
@@ -112,7 +125,7 @@ class TestSSTable:
 
         # the next key is none
         i += 1
-        assert db.get(f"{i}") is None
+        assert db.get(f"{i}", None) is None
 
     def test_get_value_from_the_last_ssfile(self, db):
         # one pass i*2 -> file1
@@ -130,6 +143,13 @@ class TestSSTable:
         # then check that the value returned if for i*4
         for i in range(db.memtable_items_limit):
             assert db.get(f"{i}") == f"{i*4}"
+
+    def test_clear_sstables(self, db):
+        for i in range(db.memtable_items_limit + 1):
+            db.set(f"{i}", f"{i*2}")
+        db.clear()
+        assert db.get("1", None) is None
+        assert db.is_empty()
 
     def test_merge_ssfiles_on_restore(self, SoonerDB, tmpdir):
         memtable_items_limit = 10
