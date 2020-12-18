@@ -7,7 +7,7 @@ soonerdb
         :target: https://pypi.python.org/pypi/soonerdb
 
 .. image:: https://img.shields.io/travis/fgmacedo/soonerdb.svg
-        :target: https://travis-ci.com/fgmacedo/soonerdb-python
+        :target: https://travis-ci.com/fgmacedo/soonerdb
 
 .. image:: https://readthedocs.org/projects/soonerdb/badge/?version=latest
         :target: https://soonerdb.readthedocs.io/en/latest/?badge=latest
@@ -51,12 +51,12 @@ Features
 Installation
 ------------
 
-The project is hosted at https://github.com/fgmacedo/soonerdb-python and can be installed from source:
+The project is hosted at https://github.com/fgmacedo/soonerdb and can be installed from source:
 
 .. code-block:: console
 
-    git clone https://github.com/fgmacedo/soonerdb-python
-    cd soonerdb-python
+    git clone https://github.com/fgmacedo/soonerdb
+    cd soonerdb
     python setup.py install
 
 
