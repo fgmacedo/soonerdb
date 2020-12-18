@@ -4,6 +4,8 @@ python:
 - 3.8
 - 3.7
 - 3.6
+before_install:
+  - pip install codecov
 install: pip install -U tox-travis
 script: tox
 deploy:
@@ -16,3 +18,5 @@ deploy:
     tags: true
     repo: fgmacedo/soonerdb
     python: 3.9
+after_success:
+  - codecov

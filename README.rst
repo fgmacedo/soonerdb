@@ -9,6 +9,10 @@ soonerdb
 .. image:: https://img.shields.io/travis/fgmacedo/soonerdb.svg
         :target: https://travis-ci.com/fgmacedo/soonerdb
 
+.. image:: https://codecov.io/gh/fgmacedo/soonerdb/branch/main/graph/badge.svg
+        :target: https://codecov.io/gh/fgmacedo/soonerdb
+        :alt: Coverage report
+
 .. image:: https://readthedocs.org/projects/soonerdb/badge/?version=latest
         :target: https://soonerdb.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
@@ -51,7 +55,13 @@ Features
 Installation
 ------------
 
-The project is hosted at https://github.com/fgmacedo/soonerdb and can be installed from source:
+You can install using ``pip``:
+
+.. code-block:: console
+
+    pip install soonerdb
+
+Or from source:
 
 .. code-block:: console
 
