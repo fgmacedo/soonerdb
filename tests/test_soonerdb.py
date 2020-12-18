@@ -59,10 +59,17 @@ class TestDictLikeInterface:
 
     def test_delete(self, db):
         db["a"] = "some value"
-
         del db['a']
-
         assert 'a' not in db
+
+    def test_items(self, db):
+        db["a"] = "some value"
+        db["b"] = "other"
+
+        assert list(db.items()) == [
+            ("a", "some value"),
+            ("b", "other"),
+        ]
 
 
 class TestWAL:
