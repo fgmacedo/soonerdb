@@ -16,7 +16,7 @@ soonerdb
 
 
 
-A LSM-Tree based datastore in Python.
+A LSM-Tree key/value datastore in Python.
 
 
 * Free software: MIT license

@@ -1,7 +1,8 @@
+from datetime import datetime
 from pathlib import Path
 
-from .memtable import MemTable
 from .io import write_pair, read_pairs, write_index, read_index
+from .memtable import MemTable
 from .merge import merge_iterables
 
 
@@ -9,7 +10,11 @@ class SSTable:
 
     def __init__(self, path, memtable: MemTable = None):
         self.path = Path(path)
-        self.index_path = path.with_name(path.name + '.index')
+        if self.path.is_dir():
+            when = datetime.utcnow().isoformat().replace(':', '_')
+            self.path = self.path / f'sst_{when}.dat'
+
+        self.index_path = self.path.with_name(self.path.name + '.index')
         self.search_index = MemTable()
 
         if self.path.exists() and memtable is not None:
@@ -66,7 +71,12 @@ class SSTable:
             for key, value in read_pairs(f.read):
                 yield key, value
 
-    def merge(self, *others):
+    def delete(self):
+        self.path.unlink()
+        self.index_path.unlink()
+
+    @staticmethod
+    def merge_all(*sstables):
         """
         Merge tables. We start from most recent.
 
@@ -76,7 +86,10 @@ class SSTable:
         This produces a new merged segment file, also sorted by key.
         """
         memtable = MemTable()
-        for key, value in merge_iterables(self, *others):
+        for key, value in merge_iterables(*sstables):
             memtable[key] = value
 
         return memtable
+
+    def merge(self, *others):
+        return self.merge_all(self, *others)

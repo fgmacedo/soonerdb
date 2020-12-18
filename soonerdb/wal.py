@@ -1,5 +1,6 @@
 from .io import write_pair, read_pairs
 
+
 class WAL:
     """
     Write-ahead logging.

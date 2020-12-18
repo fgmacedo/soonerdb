@@ -11,7 +11,13 @@ def merge_iterables(*iterables: Iterable[Tuple[str, str]]):
     """
 
     tables = [iter(sst) for sst in iterables]
-    heads = deque(next(table) for table in tables)
+    heads = deque()
+    for table in tables[:]:
+        try:
+            heads.append(next(table))
+        except StopIteration:
+            tables.remove(table)
+
     lowest_key, lowest_value = None, None
 
     def get_key(item):

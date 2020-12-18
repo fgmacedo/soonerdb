@@ -130,3 +130,54 @@ class TestSSTable:
         # then check that the value returned if for i*4
         for i in range(db.memtable_items_limit):
             assert db.get(f"{i}") == f"{i*4}"
+
+    def test_merge_ssfiles_on_restore(self, SoonerDB, tmpdir):
+        memtable_items_limit = 10
+        db = SoonerDB(tmpdir, memtable_items_limit=memtable_items_limit)
+
+        # -> file1
+        for i in [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]:
+            db.set(f"{i:.>2}", '*')
+
+        # -> file2
+        for i in [3, 5, 7, 9, 11, 13, 15, 17, 19, 21]:
+            db.set(f"{i:.>2}", '~')
+
+        # -> file3
+        for i in [1, 4, 7, 10, 13, 16, 19, 22, 25, 26]:
+            db.set(f"{i:.>2}", '+')
+
+        assert len(db._sstables) == 3
+
+        del db
+
+        db = SoonerDB(tmpdir)
+
+        assert len(db._sstables) == 1
+
+        assert list(db) == [
+            ('.1', '+'),
+            ('.2', '*'),
+            ('.3', '~'),
+            ('.4', '+'),
+            ('.5', '~'),
+            ('.6', '*'),
+            ('.7', '+'),
+            ('.8', '*'),
+            ('.9', '~'),
+            ('10', '+'),
+            ('11', '~'),
+            ('12', '*'),
+            ('13', '+'),
+            ('14', '*'),
+            ('15', '~'),
+            ('16', '+'),
+            ('17', '~'),
+            ('18', '*'),
+            ('19', '+'),
+            ('20', '*'),
+            ('21', '~'),
+            ('22', '+'),
+            ('25', '+'),
+            ('26', '+'),
+        ]

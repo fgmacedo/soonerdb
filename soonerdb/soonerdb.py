@@ -1,10 +1,9 @@
-from datetime import datetime
 from pathlib import Path
 from threading import Lock
 
 from .memtable import MemTable, SortedKeyList
-from .wal import WAL
 from .sstable import SSTable
+from .wal import WAL
 
 write_mutex = Lock()
 
@@ -19,6 +18,14 @@ class SoonerDB:
         self._wal = WAL(self.path / 'wal.dat')
         self._wal.restore(self._memtable)
         self._load_sstables()
+        self._merge_sstables()
+
+    def __iter__(self):
+        memtable = SSTable.merge_all(
+            self._memtable.items(),
+            *reversed(self._sstables),
+        )
+        return iter(memtable.items())
 
     def get(self, key, default=None):
         value = self._memtable.get(key, default)
@@ -58,12 +65,28 @@ class SoonerDB:
         # dump memtable to sstable
         # add sstable to the list
         # clear memtable and wal log
-        when = datetime.utcnow().isoformat().replace(':', '_')
-        sstable_file = self.path / f'sst_{when}.dat'
-        self._sstables.add(SSTable(sstable_file, self._memtable))
+        self._sstables.add(SSTable(self.path, self._memtable))
         self._memtable = MemTable()
         self._wal.clear()
 
     def _load_sstables(self):
         for sstable_file in self.path.glob('sst_*.dat'):
             self._sstables.add(SSTable(sstable_file))
+
+    def _merge_sstables(self):
+        if len(self._sstables) < 2:
+            return
+
+        # all merge can be done without locking
+        old_tables = self._sstables[:]
+        memtable = SSTable.merge_all(*reversed(self._sstables))
+        merged_sstable = SSTable(self.path, memtable)
+
+        with write_mutex:
+            self._sstables.add(merged_sstable)
+            for table in old_tables:
+                self._sstables.remove(table)
+
+        for table in old_tables:
+            table.delete()
+
